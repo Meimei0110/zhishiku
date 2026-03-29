@@ -86,7 +86,7 @@
 
     <script>
         function createCard(id, { name, url, updatedAt, icon, color }) {
-            const isActive = url && url.startsWith('http');
+            const isActive = url && (url.startsWith('http') || url.startsWith('./'));
             const card = document.createElement('a');
             card.href = isActive ? url : 'javascript:void(0)';
             card.target = '_blank';
@@ -141,7 +141,7 @@
 
             let hasActive = false;
             for (const [id, entry] of Object.entries(config)) {
-                if (entry.url && entry.url.startsWith('http')) hasActive = true;
+                if (entry.url && (entry.url.startsWith('http') || entry.url.startsWith('./'))) hasActive = true;
                 container.appendChild(createCard(id, entry));
             }
 
