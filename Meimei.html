@@ -128,7 +128,7 @@
 
             let config = {};
             try {
-                const res = await fetch('./config.json');
+                const res = await fetch(`./config.json?v=${Date.now()}`, { cache: 'no-store' });
                 config = await res.json();
             } catch (_) { /* config.json 不可用时静默降级 */ }
 
