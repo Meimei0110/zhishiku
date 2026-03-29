@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>莓莓知识库引擎</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            safelist: [
+                'bg-rose-500/10', 'bg-rose-500', 'border-rose-500/20', 'text-rose-400',
+                'bg-purple-500/10', 'bg-purple-500', 'border-purple-500/20', 'text-purple-400',
+                'bg-cyan-500/10', 'bg-cyan-500', 'border-cyan-500/20', 'text-cyan-400',
+                'group-hover:bg-rose-500', 'group-hover:bg-purple-500', 'group-hover:bg-cyan-500'
+            ]
+        };
+    </script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
         body {
@@ -72,89 +82,70 @@
         </div>
     </header>
 
-    <main class="w-full max-w-md flex flex-col gap-3 relative z-10 px-2">
-
-        <!-- 卡片模板：由 JS 动态绑定链接 -->
-        <a href="#" id="btn-k" target="_blank" class="ai-card glass-panel rounded-xl p-5 group flex items-center gap-4">
-            <div class="p-3 bg-rose-500/10 rounded-lg border border-rose-500/20 text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-all">
-                <i class="ph ph-sparkle text-xl"></i>
-            </div>
-            <div class="flex-grow">
-                <h2 class="font-bold text-white text-lg">小 K</h2>
-                <div class="flex items-center gap-1.5 mt-0.5">
-                    <span id="dot-k" class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
-                    <span id="status-k" class="text-[10px] text-slate-500 font-mono uppercase tracking-tighter">Offline</span>
-                </div>
-            </div>
-            <i class="ph ph-caret-right text-slate-600 group-hover:text-white transition-colors"></i>
-        </a>
-
-        <a href="#" id="btn-max" target="_blank" class="ai-card glass-panel rounded-xl p-5 group flex items-center gap-4">
-            <div class="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-all">
-                <i class="ph ph-cat text-xl"></i>
-            </div>
-            <div class="flex-grow">
-                <h2 class="font-bold text-white text-lg">小 Max</h2>
-                <div class="flex items-center gap-1.5 mt-0.5">
-                    <span id="dot-max" class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
-                    <span id="status-max" class="text-[10px] text-slate-500 font-mono uppercase tracking-tighter">Offline</span>
-                </div>
-            </div>
-            <i class="ph ph-caret-right text-slate-600 group-hover:text-white transition-colors"></i>
-        </a>
-
-        <a href="#" id="btn-mini" target="_blank" class="ai-card glass-panel rounded-xl p-5 group flex items-center gap-4">
-            <div class="p-3 bg-cyan-500/10 rounded-lg border border-cyan-500/20 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition-all">
-                <i class="ph ph-dog text-xl"></i>
-            </div>
-            <div class="flex-grow">
-                <h2 class="font-bold text-white text-lg">小 Mini</h2>
-                <div class="flex items-center gap-1.5 mt-0.5">
-                    <span id="dot-mini" class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
-                    <span id="status-mini" class="text-[10px] text-slate-500 font-mono uppercase tracking-tighter">Offline</span>
-                </div>
-            </div>
-            <i class="ph ph-caret-right text-slate-600 group-hover:text-white transition-colors"></i>
-        </a>
-
-    </main>
+    <main id="card-container" class="w-full max-w-md flex flex-col gap-3 relative z-10 px-2"></main>
 
     <script>
-        /**
-         * 逻辑：页面加载时检查 URL 中的参数
-         * ?k=URL1&max=URL2&mini=URL3
-         */
-        document.addEventListener('DOMContentLoaded', () => {
+        function createCard(id, { name, url, updatedAt, icon, color }) {
+            const isActive = url && url.startsWith('http');
+            const card = document.createElement('a');
+            card.href = isActive ? url : 'javascript:void(0)';
+            card.target = '_blank';
+            card.className = 'ai-card glass-panel rounded-xl p-5 group flex items-center gap-4';
+
+            if (!isActive) {
+                card.addEventListener('click', () => alert(`「${name}」的知识库链接尚未配置`));
+            }
+
+            const dotClass = isActive
+                ? `w-1.5 h-1.5 rounded-full bg-${color}-500 status-dot`
+                : 'w-1.5 h-1.5 rounded-full bg-slate-600';
+            const statusText = isActive ? 'Active / Ready' : 'Offline';
+            const statusColor = isActive ? 'text-emerald-400' : 'text-slate-500';
+            const timeInfo = isActive && updatedAt
+                ? `<span class="text-[9px] text-slate-500 ml-1.5">${updatedAt}</span>`
+                : '';
+
+            card.innerHTML = `
+                <div class="p-3 bg-${color}-500/10 rounded-lg border border-${color}-500/20 text-${color}-400 group-hover:bg-${color}-500 group-hover:text-white transition-all">
+                    <i class="ph ${icon} text-xl"></i>
+                </div>
+                <div class="flex-grow">
+                    <h2 class="font-bold text-white text-lg">${name}</h2>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                        <span class="${dotClass}"></span>
+                        <span class="text-[10px] ${statusColor} font-mono uppercase tracking-tighter">${statusText}</span>
+                        ${timeInfo}
+                    </div>
+                </div>
+                <i class="ph ph-caret-right text-slate-600 group-hover:text-white transition-colors"></i>`;
+
+            return card;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const container = document.getElementById('card-container');
             const params = new URLSearchParams(window.location.search);
-            
-            const configs = [
-                { id: 'k', param: 'k', color: 'bg-rose-500' },
-                { id: 'max', param: 'max', color: 'bg-purple-500' },
-                { id: 'mini', param: 'mini', color: 'bg-cyan-500' }
-            ];
 
-            let hasDynamicLink = false;
+            let config = {};
+            try {
+                const res = await fetch('./config.json');
+                config = await res.json();
+            } catch (_) { /* config.json 不可用时静默降级 */ }
 
-            configs.forEach(cfg => {
-                const btn = document.getElementById(`btn-${cfg.id}`);
-                const dot = document.getElementById(`dot-${cfg.id}`);
-                const status = document.getElementById(`status-${cfg.id}`);
-                const url = params.get(cfg.param);
-
-                if (url && url.startsWith('http')) {
-                    hasDynamicLink = true;
-                    btn.href = url;
-                    dot.className = `w-1.5 h-1.5 rounded-full ${cfg.color} status-dot`;
-                    status.innerText = "Active / Ready";
-                    status.classList.remove('text-slate-500');
-                    status.classList.add('text-emerald-400');
-                } else {
-                    btn.href = "javascript:void(0);";
-                    btn.onclick = () => alert(`请在URL参数中配置 ${cfg.id} 的链接`);
+            for (const [id, entry] of Object.entries(config)) {
+                const paramUrl = params.get(id);
+                if (paramUrl && paramUrl.startsWith('http')) {
+                    entry.url = paramUrl;
                 }
-            });
+            }
 
-            if (hasDynamicLink) {
+            let hasActive = false;
+            for (const [id, entry] of Object.entries(config)) {
+                if (entry.url && entry.url.startsWith('http')) hasActive = true;
+                container.appendChild(createCard(id, entry));
+            }
+
+            if (hasActive) {
                 document.getElementById('config-badge').classList.remove('hidden');
             }
         });
