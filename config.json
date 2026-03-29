@@ -1,0 +1,23 @@
+{
+  "k": {
+    "name": "小 K",
+    "url": "",
+    "updatedAt": "",
+    "icon": "ph-sparkle",
+    "color": "rose"
+  },
+  "max": {
+    "name": "小 Max",
+    "url": "",
+    "updatedAt": "",
+    "icon": "ph-cat",
+    "color": "purple"
+  },
+  "mini": {
+    "name": "小 Mini",
+    "url": "",
+    "updatedAt": "",
+    "icon": "ph-dog",
+    "color": "cyan"
+  }
+}
