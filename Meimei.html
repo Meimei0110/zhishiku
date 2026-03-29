@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>莓莓知识库引擎</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ai-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ai-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        .status-dot {
+            animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="antialiased flex flex-col items-center p-3 relative">
+
+    <div class="bg-grid"></div>
+
+    <header class="text-center mb-6 w-full max-w-4xl relative z-10 mt-4">
+        <div class="inline-flex items-center justify-center p-2 bg-indigo-500/10 rounded-2xl mb-2 border border-indigo-500/20">
+            <i class="ph ph-lightning text-2xl text-indigo-400"></i>
+        </div>
+        <h1 class="text-2xl font-bold mb-1 tracking-tight text-white">
+            莓莓知识库中枢
+        </h1>
+        <div id="config-badge" class="hidden inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] uppercase tracking-widest">
+            <i class="ph ph-check-circle"></i> 动态链接已加载
+        </div>
+    </header>
+
+    <main class="w-full max-w-md flex flex-col gap-3 relative z-10 px-2">
+
+        <!-- 卡片模板：由 JS 动态绑定链接 -->
+        <a href="#" id="btn-k" target="_blank" class="ai-card glass-panel rounded-xl p-5 group flex items-center gap-4">
+            <div class="p-3 bg-rose-500/10 rounded-lg border border-rose-500/20 text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-all">
+                <i class="ph ph-sparkle text-xl"></i>
+            </div>
+            <div class="flex-grow">
+                <h2 class="font-bold text-white text-lg">小 K</h2>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                    <span id="dot-k" class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+                    <span id="status-k" class="text-[10px] text-slate-500 font-mono uppercase tracking-tighter">Offline</span>
+                </div>
+            </div>
+            <i class="ph ph-caret-right text-slate-600 group-hover:text-white transition-colors"></i>
+        </a>
+
+        <a href="#" id="btn-max" target="_blank" class="ai-card glass-panel rounded-xl p-5 group flex items-center gap-4">
+            <div class="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-all">
+                <i class="ph ph-cat text-xl"></i>
+            </div>
+            <div class="flex-grow">
+                <h2 class="font-bold text-white text-lg">小 Max</h2>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                    <span id="dot-max" class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+                    <span id="status-max" class="text-[10px] text-slate-500 font-mono uppercase tracking-tighter">Offline</span>
+                </div>
+            </div>
+            <i class="ph ph-caret-right text-slate-600 group-hover:text-white transition-colors"></i>
+        </a>
+
+        <a href="#" id="btn-mini" target="_blank" class="ai-card glass-panel rounded-xl p-5 group flex items-center gap-4">
+            <div class="p-3 bg-cyan-500/10 rounded-lg border border-cyan-500/20 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition-all">
+                <i class="ph ph-dog text-xl"></i>
+            </div>
+            <div class="flex-grow">
+                <h2 class="font-bold text-white text-lg">小 Mini</h2>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                    <span id="dot-mini" class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+                    <span id="status-mini" class="text-[10px] text-slate-500 font-mono uppercase tracking-tighter">Offline</span>
+                </div>
+            </div>
+            <i class="ph ph-caret-right text-slate-600 group-hover:text-white transition-colors"></i>
+        </a>
+
+    </main>
+
+    <script>
+        /**
+         * 逻辑：页面加载时检查 URL 中的参数
+         * ?k=URL1&max=URL2&mini=URL3
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            
+            const configs = [
+                { id: 'k', param: 'k', color: 'bg-rose-500' },
+                { id: 'max', param: 'max', color: 'bg-purple-500' },
+                { id: 'mini', param: 'mini', color: 'bg-cyan-500' }
+            ];
+
+            let hasDynamicLink = false;
+
+            configs.forEach(cfg => {
+                const btn = document.getElementById(`btn-${cfg.id}`);
+                const dot = document.getElementById(`dot-${cfg.id}`);
+                const status = document.getElementById(`status-${cfg.id}`);
+                const url = params.get(cfg.param);
+
+                if (url && url.startsWith('http')) {
+                    hasDynamicLink = true;
+                    btn.href = url;
+                    dot.className = `w-1.5 h-1.5 rounded-full ${cfg.color} status-dot`;
+                    status.innerText = "Active / Ready";
+                    status.classList.remove('text-slate-500');
+                    status.classList.add('text-emerald-400');
+                } else {
+                    btn.href = "javascript:void(0);";
+                    btn.onclick = () => alert(`请在URL参数中配置 ${cfg.id} 的链接`);
+                }
+            });
+
+            if (hasDynamicLink) {
+                document.getElementById('config-badge').classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
