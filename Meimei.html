@@ -71,8 +71,17 @@
     <div class="bg-grid"></div>
 
     <header class="text-center mb-6 w-full max-w-4xl relative z-10 mt-4">
-        <div class="inline-flex items-center justify-center p-2 bg-indigo-500/10 rounded-2xl mb-2 border border-indigo-500/20">
-            <i class="ph ph-lightning text-2xl text-indigo-400"></i>
+        <div class="inline-flex items-center justify-center p-2 bg-indigo-500/10 rounded-2xl mb-2 border border-indigo-500/20 text-indigo-400">
+            <svg width="1.5em" height="1.5em" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M128 232 C80 192 48 144 48 96 C48 68 72 48 104 48 L152 48 C184 48 208 68 208 96 C208 144 176 192 128 232Z"/>
+                <path d="M104 48 C96 28 76 20 64 16"/><path d="M152 48 C160 28 180 20 192 16"/><path d="M128 48 L128 12"/>
+                <circle cx="112" cy="108" r="6" fill="currentColor" stroke="none"/>
+                <circle cx="144" cy="108" r="6" fill="currentColor" stroke="none"/>
+                <circle cx="128" cy="140" r="6" fill="currentColor" stroke="none"/>
+                <circle cx="104" cy="156" r="6" fill="currentColor" stroke="none"/>
+                <circle cx="152" cy="156" r="6" fill="currentColor" stroke="none"/>
+                <circle cx="128" cy="188" r="6" fill="currentColor" stroke="none"/>
+            </svg>
         </div>
         <h1 class="text-2xl font-bold mb-1 tracking-tight text-white">
             莓莓知识库中枢
@@ -82,7 +91,13 @@
         </div>
     </header>
 
+    <p id="quote" class="text-[11px] text-slate-500 italic tracking-wide max-w-md text-center mb-4 relative z-10 px-4"></p>
+
     <main id="card-container" class="w-full max-w-md flex flex-col gap-3 relative z-10 px-2"></main>
+
+    <footer class="fixed bottom-3 left-0 right-0 text-center z-10">
+        <p class="text-[10px] text-slate-600 tracking-wider">The only true wisdom is in knowing you know nothing.</p>
+    </footer>
 
     <script>
         function createCard(id, { name, url, updatedAt, icon, color }) {
@@ -122,7 +137,21 @@
             return card;
         }
 
+        const quotes = [
+            '知识是灵魂的食粮。 -- 柏拉图',
+            '我思故我在。 -- 笛卡尔',
+            '未经审视的人生不值得过。 -- 苏格拉底',
+            '知之为知之，不知为不知，是知也。 -- 孔子',
+            '人是万物的尺度。 -- 普罗泰戈拉',
+            '吾生也有涯，而知也无涯。 -- 庄子',
+            '世界是我的表象。 -- 叔本华',
+            '他人即地狱。 -- 萨特',
+            '凡不能毁灭我的，必使我强大。 -- 尼采',
+            '学而不思则罔，思而不学则殆。 -- 孔子'
+        ];
+
         document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('quote').textContent = quotes[Math.floor(Math.random() * quotes.length)];
             const container = document.getElementById('card-container');
             const params = new URLSearchParams(window.location.search);
 
