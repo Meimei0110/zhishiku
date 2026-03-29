@@ -55,6 +55,17 @@
             animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
 
+        @keyframes quote-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes quote-out {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-8px); }
+        }
+        .quote-enter { animation: quote-in 0.6s ease-out forwards; }
+        .quote-exit { animation: quote-out 0.4s ease-in forwards; }
+
         .bg-grid {
             background-size: 40px 40px;
             background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
@@ -91,7 +102,13 @@
         </div>
     </header>
 
-    <p id="quote" class="text-[11px] text-slate-500 italic tracking-wide max-w-md text-center mb-4 relative z-10 px-4"></p>
+    <div class="w-full max-w-md relative z-10 px-4 mb-5 flex items-center justify-center" style="min-height: 56px;">
+        <div class="text-center">
+            <p class="text-slate-400/30 text-lg leading-none select-none">"</p>
+            <p id="quote" class="text-[13px] text-slate-400 italic tracking-wide leading-relaxed quote-enter"></p>
+            <p class="text-slate-400/30 text-lg leading-none select-none text-right">"</p>
+        </div>
+    </div>
 
     <main id="card-container" class="w-full max-w-md flex flex-col gap-3 relative z-10 px-2"></main>
 
@@ -160,8 +177,25 @@
             '知行合一，方为真知。 -- 王阳明'
         ];
 
+        function startQuoteCarousel() {
+            const el = document.getElementById('quote');
+            let idx = Math.floor(Math.random() * quotes.length);
+            el.textContent = quotes[idx];
+
+            setInterval(() => {
+                el.classList.remove('quote-enter');
+                el.classList.add('quote-exit');
+                setTimeout(() => {
+                    idx = (idx + 1) % quotes.length;
+                    el.textContent = quotes[idx];
+                    el.classList.remove('quote-exit');
+                    el.classList.add('quote-enter');
+                }, 400);
+            }, 5000);
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
-            document.getElementById('quote').textContent = quotes[Math.floor(Math.random() * quotes.length)];
+            startQuoteCarousel();
             const container = document.getElementById('card-container');
             const params = new URLSearchParams(window.location.search);
 
