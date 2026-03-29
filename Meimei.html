@@ -15,7 +15,8 @@
             ]
         };
     </script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><path d='M128 232C80 192 48 144 48 96C48 68 72 48 104 48H152C184 48 208 68 208 96C208 144 176 192 128 232Z' fill='%23f43f5e'/><path d='M104 48C96 28 76 20 64 16' stroke='%2322c55e' stroke-width='14' fill='none' stroke-linecap='round'/><path d='M152 48C160 28 180 20 192 16' stroke='%2322c55e' stroke-width='14' fill='none' stroke-linecap='round'/><path d='M128 48L128 12' stroke='%2322c55e' stroke-width='14' fill='none' stroke-linecap='round'/><circle cx='112' cy='108' r='5' fill='white' opacity='.4'/><circle cx='144' cy='108' r='5' fill='white' opacity='.4'/><circle cx='128' cy='140' r='5' fill='white' opacity='.4'/><circle cx='128' cy='180' r='5' fill='white' opacity='.4'/></svg>">
     <style>
         body {
             background-color: #0f172a;
@@ -112,11 +113,52 @@
             transition: left 0.6s ease;
         }
 
+        @keyframes breathe {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        @keyframes berry-bounce {
+            0% { transform: rotate(0) scale(1); }
+            20% { transform: rotate(-8deg) scale(1.15); }
+            40% { transform: rotate(6deg) scale(1.1); }
+            60% { transform: rotate(-3deg) scale(1.05); }
+            80% { transform: rotate(1deg) scale(1.02); }
+            100% { transform: rotate(0) scale(1); }
+        }
+        @keyframes berry-pulse {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.25); }
+            60% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
         .header-icon {
-            transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+            animation: breathe 3s ease-in-out infinite;
+            cursor: pointer;
         }
         .header-icon:hover {
-            transform: rotate(12deg) scale(1.1);
+            animation: berry-bounce 0.7s ease forwards;
+        }
+        .header-icon.pulse {
+            animation: berry-pulse 0.5s ease forwards;
+        }
+
+        @keyframes page-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes card-slide-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        body.loading > *:not(canvas):not(.bg-grid):not(.glow-orb):not(#particle-canvas) {
+            opacity: 0;
+        }
+        body.ready {
+            animation: page-in 0.5s ease-out forwards;
+        }
+        .card-enter {
+            animation: card-slide-in 0.4s ease-out forwards;
+            opacity: 0;
         }
 
         @keyframes float {
@@ -158,7 +200,7 @@
         }
     </style>
 </head>
-<body class="antialiased flex flex-col items-center p-3 relative">
+<body class="antialiased flex flex-col items-center p-3 relative loading">
 
     <canvas id="particle-canvas"></canvas>
     <div class="bg-grid"></div>
@@ -167,7 +209,7 @@
     <div class="glow-orb" style="width:200px;height:200px;top:50%;left:40%;background:rgba(6,182,212,0.05);animation-delay:-8s;"></div>
 
     <header class="text-center mb-3 sm:mb-6 w-full max-w-4xl relative z-10 mt-2 sm:mt-4">
-        <div class="header-icon inline-flex items-center justify-center p-2 bg-indigo-500/10 rounded-2xl mb-2 border border-indigo-500/20 text-indigo-400 cursor-default">
+        <div id="berry-icon" class="header-icon inline-flex items-center justify-center p-2 bg-indigo-500/10 rounded-2xl mb-2 border border-indigo-500/20 text-indigo-400">
             <svg width="1.5em" height="1.5em" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M128 232 C80 192 48 144 48 96 C48 68 72 48 104 48 L152 48 C184 48 208 68 208 96 C208 144 176 192 128 232Z"/>
                 <path d="M104 48 C96 28 76 20 64 16"/><path d="M152 48 C160 28 180 20 192 16"/><path d="M128 48 L128 12"/>
@@ -308,6 +350,8 @@
             let particles = [];
             let berries = [];
             let mouse = { x: -100, y: -100 };
+            let glowPos = { x: -100, y: -100 };
+            const LINK_DIST = 120;
             const sparkColors = [
                 [99, 102, 241], [168, 85, 247], [6, 182, 212],
                 [129, 140, 248], [192, 132, 252]
@@ -365,19 +409,22 @@
                 berries.push({
                     x: Math.random() * window.innerWidth,
                     y: Math.random() * window.innerHeight,
-                    size: Math.random() * 10 + 4,
+                    baseSize: Math.random() * 10 + 4,
+                    size: 0,
                     vx: (Math.random() - 0.5) * 0.2,
                     vy: Math.random() * 0.25 + 0.08,
                     rot: Math.random() * Math.PI * 2,
                     rotV: (Math.random() - 0.5) * 0.008,
-                    alpha: Math.random() * 0.15 + 0.05,
+                    baseAlpha: Math.random() * 0.15 + 0.05,
+                    alpha: 0,
+                    breathPhase: Math.random() * Math.PI * 2,
                     col: berryColors[Math.floor(Math.random() * berryColors.length)],
                     type: 'ambient'
                 });
             }
 
             const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-            const starCount = isMobile ? 15 : 35;
+            const starCount = isMobile ? 20 : 45;
             const maxParticles = isMobile ? 100 : 250;
             const maxMouseBerries = isMobile ? 15 : 30;
 
@@ -395,6 +442,7 @@
 
             let moveCounter = 0;
             let idleFrame = 0;
+            let frame = 0;
 
             function spawnAtPointer(x, y) {
                 mouse.x = x;
@@ -419,6 +467,7 @@
                         x: x + (Math.random() - 0.5) * 30,
                         y: y + (Math.random() - 0.5) * 30,
                         size: Math.random() * 6 + 4,
+                        baseSize: 0,
                         vx: (Math.random() - 0.5) * 1,
                         vy: -Math.random() * 1.5 - 0.5,
                         rot: Math.random() * Math.PI * 2,
@@ -443,6 +492,10 @@
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 idleFrame++;
+                frame++;
+
+                glowPos.x += (mouse.x - glowPos.x) * 0.06;
+                glowPos.y += (mouse.y - glowPos.y) * 0.06;
 
                 for (let i = 0; i < stars.length; i++) {
                     const st = stars[i];
@@ -453,6 +506,25 @@
                     ctx.arc(st.x, st.y, st.r * (0.8 + twinkle * 0.4), 0, Math.PI * 2);
                     ctx.fillStyle = `rgba(${st.color[0]},${st.color[1]},${st.color[2]},${a})`;
                     ctx.fill();
+                }
+
+                if (!isMobile) {
+                    for (let i = 0; i < stars.length; i++) {
+                        for (let j = i + 1; j < stars.length; j++) {
+                            const dx = stars[i].x - stars[j].x;
+                            const dy = stars[i].y - stars[j].y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            if (dist < LINK_DIST) {
+                                const lineAlpha = (1 - dist / LINK_DIST) * 0.08;
+                                ctx.beginPath();
+                                ctx.moveTo(stars[i].x, stars[i].y);
+                                ctx.lineTo(stars[j].x, stars[j].y);
+                                ctx.strokeStyle = `rgba(129,140,248,${lineAlpha})`;
+                                ctx.lineWidth = 0.5;
+                                ctx.stroke();
+                            }
+                        }
+                    }
                 }
 
                 if (idleFrame % 90 === 0) {
@@ -468,13 +540,15 @@
                     });
                 }
 
-                if (mouse.x > 0) {
-                    const grd = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 100);
-                    grd.addColorStop(0, 'rgba(244,63,94,0.03)');
-                    grd.addColorStop(0.5, 'rgba(99,102,241,0.02)');
+                if (glowPos.x > 0) {
+                    const r = 130;
+                    const grd = ctx.createRadialGradient(glowPos.x, glowPos.y, 0, glowPos.x, glowPos.y, r);
+                    grd.addColorStop(0, 'rgba(244,63,94,0.04)');
+                    grd.addColorStop(0.4, 'rgba(99,102,241,0.025)');
+                    grd.addColorStop(0.7, 'rgba(168,85,247,0.015)');
                     grd.addColorStop(1, 'transparent');
                     ctx.fillStyle = grd;
-                    ctx.fillRect(mouse.x - 100, mouse.y - 100, 200, 200);
+                    ctx.fillRect(glowPos.x - r, glowPos.y - r, r * 2, r * 2);
                 }
 
                 for (let i = berries.length - 1; i >= 0; i--) {
@@ -489,6 +563,10 @@
                         if (b.life <= 0) { berries.splice(i, 1); continue; }
                         drawBerry(b.x, b.y, b.size, b.life * 0.5, b.rot, b.col);
                     } else {
+                        b.breathPhase += 0.015;
+                        const breathVal = Math.sin(b.breathPhase);
+                        b.size = b.baseSize * (1 + breathVal * 0.12);
+                        b.alpha = b.baseAlpha * (1 + breathVal * 0.3);
                         if (b.y > canvas.height + 20) { b.y = -20; b.x = Math.random() * canvas.width; }
                         if (b.x < -20 || b.x > canvas.width + 20) b.vx *= -1;
                         drawBerry(b.x, b.y, b.size, b.alpha, b.rot, b.col);
@@ -521,34 +599,62 @@
             draw();
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            initParticles();
-            startQuoteCarousel();
-            const container = document.getElementById('card-container');
+        async function loadConfig() {
             const params = new URLSearchParams(window.location.search);
-
             let config = {};
             try {
                 const res = await fetch(`./config.json?v=${Date.now()}`, { cache: 'no-store' });
                 config = await res.json();
-            } catch (_) { /* config.json 不可用时静默降级 */ }
-
+            } catch (_) {}
             for (const [id, entry] of Object.entries(config)) {
                 const paramUrl = params.get(id);
-                if (paramUrl && paramUrl.startsWith('http')) {
-                    entry.url = paramUrl;
-                }
+                if (paramUrl && paramUrl.startsWith('http')) entry.url = paramUrl;
             }
+            return config;
+        }
 
+        function renderCards(config, container, stagger) {
+            container.innerHTML = '';
             let hasActive = false;
+            let i = 0;
             for (const [id, entry] of Object.entries(config)) {
                 if (entry.url && (entry.url.startsWith('http') || entry.url.startsWith('./'))) hasActive = true;
-                container.appendChild(createCard(id, entry));
+                const card = createCard(id, entry);
+                if (stagger) {
+                    card.classList.add('card-enter');
+                    card.style.animationDelay = `${i * 120}ms`;
+                }
+                container.appendChild(card);
+                i++;
             }
+            if (hasActive) document.getElementById('config-badge').classList.remove('hidden');
+        }
 
-            if (hasActive) {
-                document.getElementById('config-badge').classList.remove('hidden');
-            }
+        document.addEventListener('DOMContentLoaded', async () => {
+            initParticles();
+            startQuoteCarousel();
+
+            const berryIcon = document.getElementById('berry-icon');
+            berryIcon.addEventListener('click', () => {
+                berryIcon.classList.remove('pulse');
+                void berryIcon.offsetWidth;
+                berryIcon.classList.add('pulse');
+                setTimeout(() => berryIcon.classList.remove('pulse'), 500);
+            });
+
+            const container = document.getElementById('card-container');
+            const config = await loadConfig();
+
+            if (document.fonts && document.fonts.ready) await document.fonts.ready;
+
+            document.body.classList.remove('loading');
+            document.body.classList.add('ready');
+            renderCards(config, container, true);
+
+            setInterval(async () => {
+                const fresh = await loadConfig();
+                renderCards(fresh, container, false);
+            }, 30000);
         });
     </script>
 </body>
