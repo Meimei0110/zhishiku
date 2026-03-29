@@ -56,15 +56,84 @@
         }
 
         @keyframes quote-in {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(8px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
         @keyframes quote-out {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-8px); }
+            from { opacity: 1; transform: translateY(0) scale(1); }
+            to { opacity: 0; transform: translateY(-8px) scale(0.97); }
         }
         .quote-enter { animation: quote-in 0.6s ease-out forwards; }
         .quote-exit { animation: quote-out 0.4s ease-in forwards; }
+
+        .quote-box {
+            position: relative;
+            transition: all 0.4s ease;
+        }
+        .quote-box::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.1), rgba(6,182,212,0.15));
+            z-index: -1;
+            opacity: 0.5;
+            transition: opacity 0.4s ease;
+        }
+        .quote-box:hover::before {
+            opacity: 1;
+        }
+        .quote-box:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(99,102,241,0.15), 0 0 60px rgba(168,85,247,0.05);
+        }
+        .quote-box:hover .quote-text {
+            color: #e2e8f0;
+        }
+        .quote-box:hover .quote-mark {
+            color: rgba(129,140,248,0.5);
+        }
+
+        .ai-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+            transition: none;
+        }
+        .ai-card:hover::after {
+            left: 150%;
+            transition: left 0.6s ease;
+        }
+
+        .header-icon {
+            transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+        }
+        .header-icon:hover {
+            transform: rotate(12deg) scale(1.1);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(10px, -10px) scale(1.05); }
+            66% { transform: translate(-5px, 8px) scale(0.98); }
+        }
+        .glow-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: -1;
+            animation: float 12s ease-in-out infinite;
+        }
+
+        #particle-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
 
         .bg-grid {
             background-size: 40px 40px;
@@ -79,10 +148,14 @@
 </head>
 <body class="antialiased flex flex-col items-center p-3 relative">
 
+    <canvas id="particle-canvas"></canvas>
     <div class="bg-grid"></div>
+    <div class="glow-orb" style="width:300px;height:300px;top:10%;left:-5%;background:rgba(99,102,241,0.08);animation-delay:0s;"></div>
+    <div class="glow-orb" style="width:250px;height:250px;bottom:15%;right:-5%;background:rgba(168,85,247,0.06);animation-delay:-4s;"></div>
+    <div class="glow-orb" style="width:200px;height:200px;top:50%;left:40%;background:rgba(6,182,212,0.05);animation-delay:-8s;"></div>
 
     <header class="text-center mb-6 w-full max-w-4xl relative z-10 mt-4">
-        <div class="inline-flex items-center justify-center p-2 bg-indigo-500/10 rounded-2xl mb-2 border border-indigo-500/20 text-indigo-400">
+        <div class="header-icon inline-flex items-center justify-center p-2 bg-indigo-500/10 rounded-2xl mb-2 border border-indigo-500/20 text-indigo-400 cursor-default">
             <svg width="1.5em" height="1.5em" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M128 232 C80 192 48 144 48 96 C48 68 72 48 104 48 L152 48 C184 48 208 68 208 96 C208 144 176 192 128 232Z"/>
                 <path d="M104 48 C96 28 76 20 64 16"/><path d="M152 48 C160 28 180 20 192 16"/><path d="M128 48 L128 12"/>
@@ -102,11 +175,13 @@
         </div>
     </header>
 
-    <div class="w-full max-w-md relative z-10 px-4 mb-5 flex items-center justify-center" style="min-height: 56px;">
-        <div class="text-center">
-            <p class="text-slate-400/30 text-lg leading-none select-none">"</p>
-            <p id="quote" class="text-[13px] text-slate-400 italic tracking-wide leading-relaxed quote-enter"></p>
-            <p class="text-slate-400/30 text-lg leading-none select-none text-right">"</p>
+    <div id="quote-container" class="quote-box glass-panel w-full max-w-md relative z-10 px-6 py-4 mb-5 rounded-2xl cursor-default" style="min-height: 64px;">
+        <div class="flex items-start gap-2">
+            <span class="quote-mark text-indigo-400/30 text-2xl leading-none select-none font-serif shrink-0">"</span>
+            <div class="flex-grow text-center pt-0.5">
+                <p id="quote" class="quote-text text-[13px] text-slate-400 italic tracking-wide leading-relaxed transition-colors duration-300 quote-enter"></p>
+            </div>
+            <span class="quote-mark text-indigo-400/30 text-2xl leading-none select-none font-serif self-end shrink-0">"</span>
         </div>
     </div>
 
@@ -194,10 +269,16 @@
 
         function startQuoteCarousel() {
             const el = document.getElementById('quote');
+            const box = document.getElementById('quote-container');
             let idx = Math.floor(Math.random() * quotes.length);
+            let paused = false;
             el.textContent = quotes[idx];
 
+            box.addEventListener('mouseenter', () => { paused = true; });
+            box.addEventListener('mouseleave', () => { paused = false; });
+
             setInterval(() => {
+                if (paused) return;
                 el.classList.remove('quote-enter');
                 el.classList.add('quote-exit');
                 setTimeout(() => {
@@ -209,7 +290,78 @@
             }, 5000);
         }
 
+        function initParticles() {
+            const canvas = document.getElementById('particle-canvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            let mouse = { x: -100, y: -100 };
+            const colors = [
+                [99, 102, 241],
+                [168, 85, 247],
+                [6, 182, 212],
+                [129, 140, 248],
+                [192, 132, 252]
+            ];
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            document.addEventListener('mousemove', (e) => {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+                for (let i = 0; i < 3; i++) {
+                    const c = colors[Math.floor(Math.random() * colors.length)];
+                    particles.push({
+                        x: mouse.x + (Math.random() - 0.5) * 20,
+                        y: mouse.y + (Math.random() - 0.5) * 20,
+                        vx: (Math.random() - 0.5) * 1.5,
+                        vy: (Math.random() - 0.5) * 1.5 - 0.5,
+                        r: Math.random() * 3 + 1,
+                        color: c,
+                        life: 1
+                    });
+                }
+            });
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const grd = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 120);
+                grd.addColorStop(0, 'rgba(99,102,241,0.04)');
+                grd.addColorStop(1, 'transparent');
+                ctx.fillStyle = grd;
+                ctx.fillRect(mouse.x - 120, mouse.y - 120, 240, 240);
+
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.015;
+                    p.r *= 0.995;
+
+                    if (p.life <= 0) { particles.splice(i, 1); continue; }
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${p.color[0]},${p.color[1]},${p.color[2]},${p.life * 0.6})`;
+                    ctx.shadowColor = `rgba(${p.color[0]},${p.color[1]},${p.color[2]},${p.life * 0.4})`;
+                    ctx.shadowBlur = 8;
+                    ctx.fill();
+                }
+                ctx.shadowBlur = 0;
+
+                if (particles.length > 300) particles.splice(0, particles.length - 300);
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
+            initParticles();
             startQuoteCarousel();
             const container = document.getElementById('card-container');
             const params = new URLSearchParams(window.location.search);
