@@ -211,6 +211,55 @@
             animation: shimmer 3s linear infinite;
         }
 
+        .pwd-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .pwd-overlay.active { opacity: 1; pointer-events: auto; }
+        .pwd-box {
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            width: 90%; max-width: 320px;
+            text-align: center;
+            transform: scale(0.92);
+            transition: transform 0.25s ease;
+        }
+        .pwd-overlay.active .pwd-box { transform: scale(1); }
+        .pwd-input {
+            width: 100%; padding: 0.5rem 0.75rem; margin-top: 0.75rem;
+            border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(15,23,42,0.8); color: #e2e8f0;
+            font-size: 14px; outline: none;
+            transition: border-color 0.2s;
+        }
+        .pwd-input:focus { border-color: rgba(129,140,248,0.6); }
+        .pwd-input.shake {
+            animation: pwd-shake 0.4s ease;
+            border-color: rgba(244,63,94,0.7);
+        }
+        @keyframes pwd-shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+        .pwd-btn {
+            margin-top: 0.75rem; padding: 0.45rem 1.5rem;
+            border-radius: 0.5rem; border: none;
+            background: linear-gradient(135deg, #818cf8, #c084fc);
+            color: white; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: opacity 0.2s;
+        }
+        .pwd-btn:hover { opacity: 0.85; }
+        .pwd-error { color: #f43f5e; font-size: 11px; margin-top: 0.4rem; min-height: 16px; }
+
         @keyframes float {
             0%, 100% { transform: translate(0, 0) scale(1); }
             33% { transform: translate(10px, -10px) scale(1.05); }
@@ -291,16 +340,77 @@
 
     <main id="card-container" class="w-full max-w-md flex flex-col gap-2 sm:gap-3 relative z-10 px-2"></main>
 
+    <div id="pwd-overlay" class="pwd-overlay">
+        <div class="pwd-box">
+            <i class="ph ph-lock-key text-2xl text-indigo-400 mb-1"></i>
+            <p id="pwd-title" class="text-white font-bold text-base mt-1"></p>
+            <p class="text-slate-400 text-xs mt-0.5">请输入访问密码</p>
+            <input id="pwd-input" class="pwd-input" type="password" placeholder="输入密码…" autocomplete="off">
+            <p id="pwd-error" class="pwd-error"></p>
+            <div class="flex gap-2 justify-center">
+                <button id="pwd-cancel" class="pwd-btn" style="background:rgba(255,255,255,0.08);color:#94a3b8;">取消</button>
+                <button id="pwd-confirm" class="pwd-btn">确认</button>
+            </div>
+        </div>
+    </div>
+
     <footer class="fixed bottom-2 sm:bottom-3 left-0 right-0 text-center z-10">
         <p class="text-[10px] text-slate-600 tracking-wider">Stay hungry, stay foolish. Build something people love.</p>
     </footer>
 
     <script>
+        const ACCESS_PWD = 'caomeizuibang';
+        const pwdUnlocked = {};
+
+        function showPwdDialog(name, targetUrl) {
+            const overlay = document.getElementById('pwd-overlay');
+            const input = document.getElementById('pwd-input');
+            const error = document.getElementById('pwd-error');
+            document.getElementById('pwd-title').textContent = `进入「${name}」`;
+            input.value = '';
+            error.textContent = '';
+            input.classList.remove('shake');
+            overlay.classList.add('active');
+            setTimeout(() => input.focus(), 200);
+
+            return new Promise((resolve) => {
+                function submit() {
+                    if (input.value === ACCESS_PWD) {
+                        overlay.classList.remove('active');
+                        cleanup();
+                        resolve(true);
+                    } else {
+                        error.textContent = '密码错误，请重试';
+                        input.classList.remove('shake');
+                        void input.offsetWidth;
+                        input.classList.add('shake');
+                        input.select();
+                    }
+                }
+                function cancel() {
+                    overlay.classList.remove('active');
+                    cleanup();
+                    resolve(false);
+                }
+                function onKey(e) {
+                    if (e.key === 'Enter') submit();
+                    if (e.key === 'Escape') cancel();
+                }
+                function cleanup() {
+                    document.getElementById('pwd-confirm').removeEventListener('click', submit);
+                    document.getElementById('pwd-cancel').removeEventListener('click', cancel);
+                    input.removeEventListener('keydown', onKey);
+                }
+                document.getElementById('pwd-confirm').addEventListener('click', submit);
+                document.getElementById('pwd-cancel').addEventListener('click', cancel);
+                input.addEventListener('keydown', onKey);
+            });
+        }
+
         function createCard(id, { name, url, updatedAt, icon, color }) {
             const isActive = url && (url.startsWith('http') || url.startsWith('./'));
             const card = document.createElement('a');
-            card.href = isActive ? url : 'javascript:void(0)';
-            card.target = '_blank';
+            card.href = 'javascript:void(0)';
             card.className = 'ai-card glass-panel rounded-xl p-5 group flex items-center gap-4';
 
             const glowMap = { rose: '244,63,94', purple: '168,85,247', cyan: '6,182,212' };
@@ -311,9 +421,22 @@
             const iconAnimMap = { 'ph-shrimp': 'icon-shrimp', 'ph-cat': 'icon-cat', 'ph-dog': 'icon-dog' };
             const iconAnim = iconAnimMap[icon] || '';
 
-            if (!isActive) {
-                card.addEventListener('click', () => alert(`「${name}」的知识库链接尚未配置`));
-            }
+            card.addEventListener('click', async (e) => {
+                e.preventDefault();
+                if (!isActive) {
+                    alert(`「${name}」的知识库链接尚未配置`);
+                    return;
+                }
+                if (pwdUnlocked[id]) {
+                    window.open(url, '_blank');
+                    return;
+                }
+                const ok = await showPwdDialog(name, url);
+                if (ok) {
+                    pwdUnlocked[id] = true;
+                    window.open(url, '_blank');
+                }
+            });
 
             const dotClass = isActive
                 ? `w-1.5 h-1.5 rounded-full bg-${color}-500 status-dot`
