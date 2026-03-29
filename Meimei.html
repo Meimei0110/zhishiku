@@ -64,6 +64,41 @@
             animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
 
+        @keyframes icon-wiggle {
+            0%, 100% { transform: rotate(0) translateX(0); }
+            25% { transform: rotate(-6deg) translateX(-1px); }
+            75% { transform: rotate(6deg) translateX(1px); }
+        }
+        @keyframes icon-tilt {
+            0%, 100% { transform: rotate(0); }
+            50% { transform: rotate(-8deg); }
+        }
+        @keyframes icon-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+        @keyframes icon-wiggle-fast {
+            0%, 100% { transform: rotate(0) scale(1.15); }
+            25% { transform: rotate(-10deg) scale(1.15); }
+            75% { transform: rotate(10deg) scale(1.15); }
+        }
+        @keyframes icon-stretch {
+            0%, 100% { transform: scale(1, 1); }
+            50% { transform: scale(1.2, 0.9); }
+        }
+        @keyframes icon-wag {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            25% { transform: translateY(-4px) rotate(-5deg); }
+            50% { transform: translateY(0) rotate(0); }
+            75% { transform: translateY(-4px) rotate(5deg); }
+        }
+        .icon-shrimp { animation: icon-wiggle 2s ease-in-out infinite; display: inline-block; }
+        .icon-cat { animation: icon-tilt 3s ease-in-out infinite; display: inline-block; }
+        .icon-dog { animation: icon-bounce 1.5s ease-in-out infinite; display: inline-block; }
+        .ai-card:hover .icon-shrimp { animation: icon-wiggle-fast 0.4s ease-in-out infinite; }
+        .ai-card:hover .icon-cat { animation: icon-stretch 0.6s ease-in-out infinite; }
+        .ai-card:hover .icon-dog { animation: icon-wag 0.3s ease-in-out infinite; }
+
         @keyframes quote-in {
             from { opacity: 0; transform: translateY(8px) scale(0.97); }
             to { opacity: 1; transform: translateY(0) scale(1); }
@@ -273,6 +308,9 @@
             card.style.setProperty('--card-glow', `rgba(${glowRgb},0.3)`);
             card.style.setProperty('--card-glow-soft', `rgba(${glowRgb},0.1)`);
 
+            const iconAnimMap = { 'ph-shrimp': 'icon-shrimp', 'ph-cat': 'icon-cat', 'ph-dog': 'icon-dog' };
+            const iconAnim = iconAnimMap[icon] || '';
+
             if (!isActive) {
                 card.addEventListener('click', () => alert(`「${name}」的知识库链接尚未配置`));
             }
@@ -288,7 +326,7 @@
 
             card.innerHTML = `
                 <div class="p-3 bg-${color}-500/10 rounded-lg border border-${color}-500/20 text-${color}-400 group-hover:bg-${color}-500 group-hover:text-white transition-all">
-                    <i class="ph ${icon} text-xl"></i>
+                    <i class="ph ${icon} text-xl ${iconAnim}"></i>
                 </div>
                 <div class="flex-grow">
                     <h2 class="font-bold text-white text-lg">${name}</h2>
