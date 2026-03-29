@@ -360,7 +360,7 @@
 
     <script>
         const ACCESS_PWD = 'caomeizuibang';
-        const pwdUnlocked = {};
+        let pwdUnlocked = false;
 
         function showPwdDialog(name, targetUrl) {
             const overlay = document.getElementById('pwd-overlay');
@@ -427,13 +427,13 @@
                     alert(`「${name}」的知识库链接尚未配置`);
                     return;
                 }
-                if (pwdUnlocked[id]) {
+                if (pwdUnlocked) {
                     window.open(url, '_blank');
                     return;
                 }
                 const ok = await showPwdDialog(name, url);
                 if (ok) {
-                    pwdUnlocked[id] = true;
+                    pwdUnlocked = true;
                     window.open(url, '_blank');
                 }
             });
