@@ -443,9 +443,11 @@
                 : 'w-1.5 h-1.5 rounded-full bg-slate-600';
             const statusText = isActive ? 'Active / Ready' : 'Offline';
             const statusColor = isActive ? 'text-emerald-400' : 'text-slate-500';
-            const timeInfo = isActive && updatedAt
-                ? `<span class="text-[9px] text-slate-500 ml-1.5">${updatedAt}</span>`
-                : '';
+            let timeDisplay = '';
+            if (isActive && updatedAt) {
+                const icon_clock = '<i class="ph ph-clock text-[9px]"></i>';
+                timeDisplay = `<span class="text-[9px] text-slate-500 ml-1.5 inline-flex items-center gap-0.5">${icon_clock} ${updatedAt}</span>`;
+            }
 
             card.innerHTML = `
                 <div class="p-3 bg-${color}-500/10 rounded-lg border border-${color}-500/20 text-${color}-400 group-hover:bg-${color}-500 group-hover:text-white transition-all">
@@ -456,7 +458,7 @@
                     <div class="flex items-center gap-1.5 mt-0.5">
                         <span class="${dotClass}"></span>
                         <span class="text-[10px] ${statusColor} font-mono uppercase tracking-tighter">${statusText}</span>
-                        ${timeInfo}
+                        ${timeDisplay}
                     </div>
                 </div>
                 <i class="ph ph-caret-right text-slate-600 group-hover:text-white transition-colors"></i>`;
